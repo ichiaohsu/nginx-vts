@@ -1,0 +1,118 @@
+workspace:
+  base: /mirror-media
+  path: mirror-voice
+pipeline:
+  # -------------------------------------- Github Push  -------------------------------
+  start:
+    image: gcr.io/mirrormedia-1470651750304/drone-slack:v1.0.0
+    pull: true
+    channel: ground_control
+    secrets: [slack_webhook]
+    username: drone
+    icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
+    recipient: ${DRONE_COMMIT_AUTHOR}
+    usermaps:
+      chiangkeith: chiangkeith
+      FalseChord: Yen
+      hcchien: hcchien
+      hsuehyungtan: noah.tan
+      kwhsiung: kwhsiung
+      ichiaohsu: mmich
+    when:
+      event: push
+      branch: master
+    template: >
+      You pushed *${DRONE_COMMIT_SHA:0:7}* to {{repo.name}}:*{{build.branch}}*. Build start.
+
+  publish:
+    image: plugins/gcr
+    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
+    tag:
+    - ${DRONE_COMMIT_SHA:0:7}
+    - master
+    environment:
+      - DOCKER_LAUNCH_DEBUG=true
+    secrets: [google_credentials]
+    when:
+      event: push
+      branch: master
+
+  finish:
+    image: gcr.io/mirrormedia-1470651750304/drone-slack:v1.0.0
+    channel: ground_control
+    secrets: [slack_webhook]
+    username: drone
+    link_names: true
+    icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
+    recipient: ${DRONE_COMMIT_AUTHOR}
+    usermaps:
+      chiangkeith: chiangkeith
+      FalseChord: Yen
+      hcchien: hcchien
+      hsuehyungtan: noah.tan
+      kwhsiung: kwhsiung
+      ichiaohsu: mmich
+    when:
+      event: push
+      branch: master
+    template: >
+      {{#success build.status}}
+        ${DRONE_REPO_NAME}:*${DRONE_COMMIT_SHA:0:7}* is on the table.
+      {{else}}
+        Houston, we have a problem. Build <${DRONE_BUILD_LINK}|#{{build.number}}> failed. Fix me please.
+      {{/success}}
+  # ------------------------------------------ GitHub Tag -----------------------------------------
+  start:
+    image: gcr.io/mirrormedia-1470651750304/drone-slack:v1.0.0
+    pull: true
+    channel: ground_control
+    secrets: [slack_webhook]
+    username: drone
+    icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
+    recipient: ${DRONE_COMMIT_AUTHOR}
+    usermaps:
+      chiangkeith: chiangkeith
+      FalseChord: Yen
+      hcchien: hcchien
+      hsuehyungtan: noah.tan
+      kwhsiung: kwhsiung
+      ichiaohsu: mmich
+    when:
+      event: tag
+    template: >
+      Releasing ${DRONE_REPO_NAME} ${DRONE_TAG}.
+
+  publish:
+    image: plugins/gcr
+    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
+    tag:
+    - ${DRONE_TAG}
+    environment:
+      - DOCKER_LAUNCH_DEBUG=true
+    secrets: [google_credentials]
+    when:
+      event: tag
+
+  finish:
+    image: gcr.io/mirrormedia-1470651750304/drone-slack:v1.0.0
+    channel: ground_control
+    secrets: [slack_webhook]
+    username: drone
+    link_names: true
+    icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
+    recipient: ${DRONE_COMMIT_AUTHOR}
+    usermaps:
+      chiangkeith: chiangkeith
+      FalseChord: Yen
+      hcchien: hcchien
+      hsuehyungtan: noah.tan
+      kwhsiung: kwhsiung
+      ichiaohsu: mmich
+    when:
+      event: tag
+    template: >
+      {{#success build.status}}
+        ${DRONE_REPO_NAME}:*${DRONE_TAG}* is on the table.
+      {{else}}
+        Houston, we have a problem. Build <${DRONE_BUILD_LINK}|#{{build.number}}> failed. Fix me please.
+      {{/success}}
